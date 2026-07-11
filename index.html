@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#2b7a8c">
+<title>工場清掃ボード｜林材木店</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232b7a8c'/><text x='51' y='46.5' font-size='68' text-anchor='middle' dominant-baseline='central' fill='%23ffffff' font-family='sans-serif' font-weight='bold'>清</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232b7a8c'/><text x='51' y='46.5' font-size='68' text-anchor='middle' dominant-baseline='central' fill='%23ffffff' font-family='sans-serif' font-weight='bold'>清</text></svg>">
+<meta name="apple-mobile-web-app-title" content="清掃ボード">
+<style>
+:root{
+  --bg:#eef4f5; --card:#ffffff; --ink:#22323a; --sub:#7b8b91; --line:#dbe6e8;
+  --accent:#2b7a8c; --accent2:#1f5f6e; --danger:#c25538; --ok:#3d8a4f;
+  --chip:#e4eef0; --hl:#f0f6f7;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{font-family:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo",sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;padding-bottom:96px}
+button{font-family:inherit;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:16px}
+
+/* ===== ヘッダー ===== */
+header{position:sticky;top:0;z-index:30;background:var(--accent);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 10px rgba(34,50,58,.18)}
+header .ttl{font-size:16px;font-weight:800;letter-spacing:.04em;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header .ttl small{display:block;font-size:10px;font-weight:600;opacity:.75;letter-spacing:.1em}
+.hbtn{border:0;background:rgba(255,255,255,.14);color:#fff;border-radius:9px;padding:7px 10px;font-size:12px;font-weight:700;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:4px}
+.hbtn:active{background:rgba(255,255,255,.28)}
+#srcBadge{border:0;background:rgba(0,0,0,.18);color:#d6e8e0;border-radius:99px;padding:5px 10px;font-size:10.5px;font-weight:700}
+#srcBadge.err{color:#ffd9c9}
+
+/* ===== タブ ===== */
+.tabs{position:sticky;top:calc(env(safe-area-inset-top) + 54px);z-index:25;display:flex;gap:6px;padding:10px 14px 8px;background:linear-gradient(var(--bg) 82%,rgba(238,244,245,0));max-width:760px;margin:0 auto}
+.tab{flex:1;border:1.5px solid var(--line);background:var(--card);color:var(--sub);border-radius:12px;padding:9px 0;font-size:13px;font-weight:800}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.tab .n{font-size:10.5px;margin-left:3px;opacity:.75}
+
+/* ===== カード ===== */
+main{padding:4px 14px 0;max-width:760px;margin:0 auto}
+.sechead{font-size:12px;font-weight:800;color:var(--sub);letter-spacing:.06em;margin:16px 2px 8px;display:flex;align-items:center;gap:6px}
+.sechead::after{content:"";flex:1;height:1px;background:var(--line)}
+.sechead.warn{color:var(--danger)}
+.card{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--cc,#9ab);border-radius:14px;padding:12px 14px;margin-bottom:10px;box-shadow:0 1px 5px rgba(34,50,58,.06);display:flex;align-items:center;gap:12px}
+.card .info{flex:1;min-width:0}
+.card .place{font-size:15px;font-weight:800;line-height:1.4}
+.card .body{font-size:13px;color:var(--ink);opacity:.85;line-height:1.4;margin-top:1px}
+.card .meta{font-size:10.5px;color:var(--sub);margin-top:5px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.fbadge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:var(--chip);color:var(--accent2)}
+.latebadge{font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;background:var(--danger);color:#fff}
+.ckbtn{flex:0 0 auto;border:0;border-radius:14px;background:var(--accent);color:#fff;font-size:13px;font-weight:800;padding:0 16px;height:52px;box-shadow:0 3px 8px rgba(43,122,140,.3)}
+.ckbtn:active{transform:scale(.95)}
+.card.done{opacity:.85;border-left-color:var(--ok)}
+.donetag{flex:0 0 auto;text-align:center;font-size:11.5px;font-weight:800;color:var(--ok);line-height:1.5}
+.donetag .undo{display:block;border:0;background:none;font-size:10.5px;font-weight:700;color:var(--sub);text-decoration:underline;margin:2px auto 0}
+.card.wait{opacity:.6}
+.card.wait .nextd{flex:0 0 auto;font-size:11px;font-weight:800;color:var(--sub);text-align:center;line-height:1.4}
+.card.stopped{opacity:.55;border-left-color:#aaa}
+.editlink{flex:0 0 auto;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:9px 12px;font-size:12px;font-weight:700;color:var(--ink)}
+.empty{text-align:center;color:var(--sub);padding:56px 0;font-size:13px;line-height:2}
+.empty .big{font-size:34px}
+.allok{text-align:center;padding:30px 0 6px;font-size:14px;font-weight:800;color:var(--ok)}
+.allok .big{font-size:44px;display:block;margin-bottom:6px}
+
+/* ===== FAB ===== */
+#fab{position:fixed;right:18px;bottom:calc(env(safe-area-inset-bottom) + 18px);z-index:40;border:0;border-radius:99px;background:var(--accent);color:#fff;font-size:15px;font-weight:800;padding:15px 22px;box-shadow:0 6px 18px rgba(31,95,110,.4);display:none;align-items:center;gap:7px}
+#fab:active{transform:scale(.96)}
+
+/* ===== モーダル共通 ===== */
+.mwrap{position:fixed;inset:0;z-index:50;display:none;align-items:flex-end;justify-content:center;background:rgba(34,50,58,.45)}
+.mwrap.show{display:flex}
+.modal{background:var(--card);width:100%;max-width:640px;max-height:88vh;border-radius:20px 20px 0 0;display:flex;flex-direction:column;animation:up .18s ease}
+@media(min-width:700px){.mwrap{align-items:center}.modal{border-radius:20px}}
+@keyframes up{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+.mhead{display:flex;align-items:center;padding:16px 18px 10px}
+.mhead h2{font-size:16px;font-weight:800;flex:1}
+.mx{border:0;background:var(--chip);border-radius:99px;width:32px;height:32px;font-size:14px;color:var(--sub)}
+.mbody{overflow-y:auto;padding:2px 18px 18px;-webkit-overflow-scrolling:touch}
+.fld{margin-bottom:13px}
+.fld label{display:block;font-size:12px;font-weight:800;color:var(--sub);margin-bottom:5px}
+.fld label em{color:var(--danger);font-style:normal;margin-left:2px}
+.fld input[type=text],.fld input[type=number],.fld select,.fld textarea{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:11px;background:#fff;outline:none}
+.fld textarea{min-height:56px;resize:vertical;line-height:1.5}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--accent)}
+.dowrow{display:flex;gap:5px}
+.dow{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:10px 0;font-size:13px;font-weight:800;color:var(--sub)}
+.dow.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.merr{color:var(--danger);font-size:12px;font-weight:700;text-align:center;min-height:18px;padding-top:6px}
+.msave{width:100%;border:0;border-radius:13px;background:var(--accent);color:#fff;font-size:15px;font-weight:800;padding:14px 0;margin-top:4px}
+.msave:disabled{opacity:.5}
+.mstop{width:100%;border:1.5px solid #e8cfc3;background:#fff;border-radius:13px;color:var(--danger);font-size:13px;font-weight:800;padding:12px 0;margin-top:10px}
+.mstop.rev{border-color:#cfdcc8;color:var(--ok)}
+
+/* ===== 実施者ピッカー ===== */
+.whohint{font-size:12.5px;color:var(--sub);line-height:1.6;margin-bottom:12px;background:var(--hl);border-radius:10px;padding:10px 12px}
+.whochips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.who{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:13px 20px;font-size:15px;font-weight:800;color:var(--ink)}
+.who.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.whoedit{border:0;background:none;font-size:11.5px;color:var(--sub);text-decoration:underline;padding:4px}
+
+/* ===== 記録 ===== */
+.hitem{border-bottom:1px solid var(--line);padding:11px 2px;font-size:13px;line-height:1.6;display:flex;align-items:center;gap:8px}
+.hitem .who2{font-size:11px;font-weight:800;color:#fff;background:var(--accent);border-radius:99px;padding:3px 10px;flex:0 0 auto}
+.hitem .what{flex:1;min-width:0}
+.hitem .when{color:var(--sub);font-size:10.5px;flex:0 0 auto}
+
+/* ===== ログインゲート ===== */
+#gate{position:fixed;inset:0;z-index:100;background:var(--bg);display:none;align-items:center;justify-content:center;padding:22px}
+.gcard{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:30px 24px;width:100%;max-width:360px;box-shadow:0 10px 40px rgba(34,50,58,.12);text-align:center}
+.gcard .logo{font-size:40px}
+.gcard h1{font-size:17px;font-weight:800;margin:8px 0 2px}
+.gcard p{font-size:11.5px;color:var(--sub);margin-bottom:18px}
+.gcard input{width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:11px;margin-bottom:10px;outline:none;background:#fff}
+.gcard input:focus{border-color:var(--accent)}
+.pwrow{position:relative}
+.pwrow button{position:absolute;right:4px;top:4px;border:0;background:none;font-size:15px;padding:8px}
+.gkeep{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--sub);margin:4px 0 14px}
+.gkeep input{width:16px;height:16px;accent-color:var(--accent)}
+#gateBtn{width:100%;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:15px;font-weight:800;padding:13px 0}
+#gateErr{color:var(--danger);font-size:12px;font-weight:700;min-height:18px;margin-top:10px}
+
+/* ===== トースト ===== */
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 86px);transform:translateX(-50%) translateY(20px);z-index:80;background:var(--ink);color:#fff;font-size:13px;font-weight:700;padding:11px 20px;border-radius:99px;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap}
+#toast.show{opacity:1;transform:translateX(-50%)}
+.spin{display:inline-block;width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;margin-bottom:12px}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="ttl">🧹 工場清掃ボード<small>HAYASHI LUMBER — 定期清掃チェック</small></div>
+  <button id="srcBadge">…</button>
+  <a class="hbtn" id="sheetBtn" target="_blank" style="display:none">📊</a>
+</header>
+
+<div class="tabs">
+  <button class="tab on" data-tab="today">✅ きょう<span class="n" id="nToday"></span></button>
+  <button class="tab" data-tab="master">📋 清掃箇所</button>
+  <button class="tab" data-tab="log">🕐 記録</button>
+</div>
+
+<main id="list"></main>
+
+<button id="fab">＋ 清掃箇所を追加</button>
+
+<!-- 実施者ピッカー -->
+<div class="mwrap" id="whoWrap">
+  <div class="modal">
+    <div class="mhead"><h2 id="whoTitle">だれがやった？</h2><button class="mx" data-close="whoWrap">✕</button></div>
+    <div class="mbody">
+      <div class="whohint" id="whoTask"></div>
+      <div class="whochips" id="whoChips"></div>
+      <button class="msave" id="whoSave">チェックする</button>
+      <div style="text-align:center;margin-top:10px"><button class="whoedit" id="memberEditBtn">メンバーを編集する</button></div>
+      <div class="merr" id="whoErr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 箇所 追加・編集 -->
+<div class="mwrap" id="editWrap">
+  <div class="modal">
+    <div class="mhead"><h2 id="emTitle">清掃箇所を追加</h2><button class="mx" data-close="editWrap">✕</button></div>
+    <div class="mbody">
+      <div class="fld"><label>場所<em>*</em></label><input type="text" id="fPlace" placeholder="例：加工場 ／ トイレ ／ 休憩室"></div>
+      <div class="fld"><label>やること</label><input type="text" id="fBody" placeholder="例：切粉・おが屑の掃除"></div>
+      <div class="fld"><label>頻度<em>*</em></label>
+        <select id="fFreqType">
+          <option value="daily">毎日</option>
+          <option value="weekly">毎週（曜日を選ぶ）</option>
+          <option value="monthly">毎月（日にちを選ぶ）</option>
+          <option value="interval">○日ごと</option>
+        </select>
+      </div>
+      <div class="fld" id="fWeeklyWrap" style="display:none"><label>曜日（複数OK）</label><div class="dowrow" id="fDows"></div></div>
+      <div class="fld" id="fMonthlyWrap" style="display:none"><label>毎月何日？</label><input type="number" id="fMonthDay" min="1" max="31" value="1"></div>
+      <div class="fld" id="fIntervalWrap" style="display:none"><label>何日ごと？</label><input type="number" id="fIntDays" min="1" max="365" value="7"></div>
+      <div class="fld"><label>メモ</label><textarea id="fNote" placeholder="やり方のコツ・注意点など（任意）"></textarea></div>
+      <div class="merr" id="fErr"></div>
+      <button class="msave" id="fSave">保存する</button>
+      <button class="mstop" id="fStop" style="display:none">⏸ この箇所をおやすみにする（一覧から外す）</button>
+    </div>
+  </div>
+</div>
+
+<!-- メンバー編集 -->
+<div class="mwrap" id="memberWrap">
+  <div class="modal">
+    <div class="mhead"><h2>👷 メンバー編集</h2><button class="mx" data-close="memberWrap">✕</button></div>
+    <div class="mbody">
+      <div class="fld"><label>メンバー（1行に1人）</label><textarea id="memberText" style="min-height:120px"></textarea></div>
+      <div class="merr" id="memberErr"></div>
+      <button class="msave" id="memberSave">保存する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ログインゲート -->
+<div id="gate">
+  <div class="gcard">
+    <div class="logo">🧹</div>
+    <h1>工場清掃ボード</h1>
+    <p>林材木店の定期清掃チェックツール</p>
+    <input id="gateMail" type="email" placeholder="メールアドレス" autocomplete="username">
+    <div class="pwrow">
+      <input id="gatePass" type="password" placeholder="パスワード" autocomplete="current-password">
+      <button id="pwEye" type="button">👁</button>
+    </div>
+    <label class="gkeep"><input type="checkbox" id="gateKeep" checked>この端末でログインを保持する</label>
+    <button id="gateBtn">ログイン</button>
+    <div id="gateErr"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ===== 接続設定 ===== */
+const GAS_URL="https://script.google.com/macros/s/AKfycbxKjjYjlpR67jHmu25ISYS_E0cfxsCTK1psq_Bfh-WKhoTYZQ6HQtIE-m9JABSnSvMZPw/exec";
+const CRED_KEY="hayazai_seiso_cred";
+const CACHE_KEY="hayazai_seiso_cache";
+const WHO_KEY="hayazai_seiso_who";
+
+const DOW_LABEL=["日","月","火","水","木","金","土"];
+
+/* ===== 状態 ===== */
+let TASKS=[], MEMBERS=[], LOGS=[], SHEET_URL="";
+let TAB="today";
+let editingId=null;
+let checkingId=null;
+let selWho="";
+let selDows=new Set();
+
+/* ===== 資格情報 ===== */
+function creds(){ try{ return JSON.parse(localStorage.getItem(CRED_KEY)||sessionStorage.getItem(CRED_KEY)||"{}"); }catch(e){ return {}; } }
+function saveCreds(email,pass,keep){ const v=JSON.stringify({email,pass}); if(keep){ localStorage.setItem(CRED_KEY,v); sessionStorage.removeItem(CRED_KEY); } else { sessionStorage.setItem(CRED_KEY,v); localStorage.removeItem(CRED_KEY); } }
+function clearCreds(){ localStorage.removeItem(CRED_KEY); sessionStorage.removeItem(CRED_KEY); localStorage.removeItem(CACHE_KEY); }
+function authQS(){ const c=creds(); return "email="+encodeURIComponent(c.email||"")+"&pass="+encodeURIComponent(c.pass||""); }
+
+/* ===== ユーティリティ ===== */
+const $=id=>document.getElementById(id);
+function esc(s){ return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])); }
+function b64utf8(s){ const b=new TextEncoder().encode(s); let x=""; for(let i=0;i<b.length;i+=0x8000){ x+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000)); } return btoa(x); }
+let toastTimer=null;
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("show"),2200); }
+
+/* ===== 日付（すべて 'yyyy-mm-dd' 文字列で扱う）===== */
+function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function toDate(s){ const [y,m,d]=s.split("-").map(Number); return new Date(y,m-1,d); }
+function toStr(d){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function addDays(s,n){ const d=toDate(s); d.setDate(d.getDate()+n); return toStr(d); }
+function diffDays(a,b){ return Math.round((toDate(a)-toDate(b))/86400000); }
+function fmtMD(s){ if(!s) return ""; const [y,m,d]=s.split("-").map(Number); return m+"/"+d+"("+DOW_LABEL[toDate(s).getDay()]+")"; }
+
+/* ===== 次回期日の計算 ===== */
+function nextDue(t){
+  const today=todayStr();
+  if(!t.lastDone) return today;              // 一度もやってない → きょうが期日
+  const last=t.lastDone;
+  if(t.freqType==="daily") return addDays(last,1);
+  if(t.freqType==="interval"){ const n=Math.max(1,parseInt(t.freqVal,10)||1); return addDays(last,n); }
+  if(t.freqType==="weekly"){
+    const days=String(t.freqVal).split(",").map(x=>parseInt(x,10)).filter(x=>x>=0&&x<=6);
+    if(!days.length) return addDays(last,7);
+    for(let i=1;i<=7;i++){ const d=addDays(last,i); if(days.includes(toDate(d).getDay())) return d; }
+    return addDays(last,7);
+  }
+  if(t.freqType==="monthly"){
+    const dayN=Math.min(31,Math.max(1,parseInt(t.freqVal,10)||1));
+    const ld=toDate(last);
+    for(let k=0;k<=13;k++){
+      const y=ld.getFullYear(), m=ld.getMonth()+k;
+      const lastDay=new Date(y,m+1,0).getDate();
+      const cand=toStr(new Date(y,m,Math.min(dayN,lastDay)));
+      if(cand>last) return cand;
+    }
+  }
+  return addDays(last,1);
+}
+function freqLabel(t){
+  if(t.freqType==="daily") return "毎日";
+  if(t.freqType==="weekly"){ const ds=String(t.freqVal).split(",").map(x=>parseInt(x,10)).filter(x=>x>=0&&x<=6); return "毎週 "+(ds.map(d=>DOW_LABEL[d]).join("・")||"?"); }
+  if(t.freqType==="monthly") return "毎月"+(parseInt(t.freqVal,10)||1)+"日";
+  if(t.freqType==="interval") return (parseInt(t.freqVal,10)||1)+"日ごと";
+  return "";
+}
+
+/* ===== 起動 ===== */
+function boot(){
+  buildDowButtons();
+  const c=creds();
+  if(c.email&&c.pass){
+    $("gate").style.display="none";
+    const cache=loadCache();
+    if(cache){ TASKS=cache.tasks||[]; MEMBERS=cache.members||[]; LOGS=cache.logs||[]; SHEET_URL=cache.sheetUrl||""; render(); }
+    else showLoadingList();
+    fetchAll();
+  } else showGate();
+}
+function showGate(err){ $("gate").style.display="flex"; $("gateErr").textContent=err||""; setTimeout(()=>$("gateMail").focus(),60); }
+$("pwEye").onclick=()=>{ const i=$("gatePass"); const s=i.type==="password"; i.type=s?"text":"password"; $("pwEye").textContent=s?"🙈":"👁"; };
+["gateMail","gatePass"].forEach(id=>$(id).addEventListener("keydown",e=>{ if(e.key==="Enter") submitGate(); }));
+$("gateBtn").onclick=submitGate;
+function submitGate(){
+  const email=$("gateMail").value.trim(), pass=$("gatePass").value;
+  if(!email||!pass) return;
+  saveCreds(email,pass,$("gateKeep").checked);
+  $("gate").style.display="none";
+  showLoadingList();
+  fetchAll();
+}
+$("srcBadge").onclick=()=>{ if(confirm("ログアウトしますか？")){ clearCreds(); location.reload(); } };
+
+function showLoadingList(){ $("list").innerHTML='<div class="empty"><div class="spin"></div>読み込み中…<br><span style="font-size:10.5px">初回は20秒ほどかかることがあります</span></div>'; }
+function setBadge(state){ const b=$("srcBadge"); if(state==="live"){ b.className=""; b.textContent="● ライブ"; } else if(state==="load"){ b.className=""; b.textContent="● 読込中…"; } else { b.className="err"; b.textContent="● オフライン"; } }
+
+/* ===== データ取得 ===== */
+async function fetchOnce(url,ms){
+  const ctrl=new AbortController(); const to=setTimeout(()=>ctrl.abort(),ms);
+  try{ const r=await fetch(url,{signal:ctrl.signal}); const t=await r.text(); if(!t||t.trim()[0]!=="{") throw new Error("bad response"); return JSON.parse(t); }
+  finally{ clearTimeout(to); }
+}
+async function fetchAll(){
+  setBadge("load");
+  let j=null;
+  for(let i=0;i<3&&!j;i++){ try{ j=await fetchOnce(GAS_URL+"?api=all&"+authQS(), i===0?25000:12000); }catch(e){ j=null; } }
+  if(!j){ setBadge("err"); if(!TASKS.length) $("list").innerHTML='<div class="empty"><div class="big">📡</div>読み込みに失敗しました<br><button class="editlink" style="margin-top:14px" onclick="fetchAll()">再読み込み</button></div>'; return; }
+  if(!j.ok){ if(j.error==="unauthorized"){ clearCreds(); showGate("メールまたはパスワードが違います"); } else { setBadge("err"); toast("エラー: "+(j.error||"不明")); } return; }
+  TASKS=j.tasks||[]; MEMBERS=j.members||[]; LOGS=j.logs||[]; SHEET_URL=j.sheetUrl||"";
+  try{ localStorage.setItem(CACHE_KEY,JSON.stringify({tasks:TASKS,members:MEMBERS,logs:LOGS,sheetUrl:SHEET_URL})); }catch(e){}
+  const sb=$("sheetBtn"); if(SHEET_URL){ sb.href=SHEET_URL; sb.style.display=""; }
+  setBadge("live"); render();
+}
+function loadCache(){ try{ const s=localStorage.getItem(CACHE_KEY); return s?JSON.parse(s):null; }catch(e){ return null; } }
+
+async function postAction(payload){
+  const c=creds();
+  const body=b64utf8(JSON.stringify({...payload,email:c.email,pass:c.pass}));
+  const r=await fetch(GAS_URL,{method:"POST",body:body});
+  const t=await r.text();
+  if(!t||t.trim()[0]!=="{") throw new Error("bad response");
+  return JSON.parse(t);
+}
+
+/* ===== タブ ===== */
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{ TAB=b.dataset.tab; document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("on",x===b)); render(); });
+
+/* ===== 描画 ===== */
+function render(){
+  $("fab").style.display=TAB==="master"?"flex":"none";
+  const today=todayStr();
+  const active=TASKS.filter(t=>t.status!=="停止");
+  const dueCnt=active.filter(t=>t.lastDone!==today&&nextDue(t)<=today).length;
+  $("nToday").textContent=dueCnt?dueCnt:"";
+  if(TAB==="today") renderToday();
+  else if(TAB==="master") renderMaster();
+  else renderLog();
+}
+
+function renderToday(){
+  const today=todayStr();
+  const active=TASKS.filter(t=>t.status!=="停止");
+  if(!active.length){ $("list").innerHTML='<div class="empty"><div class="big">🧹</div>清掃箇所がまだありません<br>「📋 清掃箇所」タブから追加できます</div>'; return; }
+  const overdue=[], due=[], doneToday=[], waiting=[];
+  active.forEach(t=>{
+    if(t.lastDone===today){ doneToday.push(t); return; }
+    const nd=nextDue(t);
+    if(nd<today) overdue.push({t,nd});
+    else if(nd===today) due.push({t,nd});
+    else waiting.push({t,nd});
+  });
+  overdue.sort((a,b)=>a.nd.localeCompare(b.nd));
+  waiting.sort((a,b)=>a.nd.localeCompare(b.nd));
+  let html="";
+  if(!overdue.length&&!due.length){
+    html+='<div class="allok"><span class="big">🎉</span>きょうの清掃はぜんぶ完了！</div>';
+  }
+  if(overdue.length){
+    html+='<div class="sechead warn">⚠️ 期限切れ（早めにやろう）</div>';
+    overdue.forEach(x=>html+=todayCard(x.t,"over",x.nd));
+  }
+  if(due.length){
+    html+='<div class="sechead">✅ きょうやる清掃</div>';
+    due.forEach(x=>html+=todayCard(x.t,"due",x.nd));
+  }
+  if(doneToday.length){
+    html+='<div class="sechead">🌟 きょう済み</div>';
+    doneToday.forEach(t=>html+=todayCard(t,"done",""));
+  }
+  if(waiting.length){
+    html+='<div class="sechead">🗓 次回待ち</div>';
+    waiting.forEach(x=>html+=todayCard(x.t,"wait",x.nd));
+  }
+  $("list").innerHTML=html;
+}
+
+function todayCard(t,mode,nd){
+  const today=todayStr();
+  const last=t.lastDone?fmtMD(t.lastDone)+(t.lastBy?"・"+esc(t.lastBy):""):"まだ記録なし";
+  const late=mode==="over"?diffDays(today,nd):0;
+  let right="";
+  if(mode==="done"){
+    right=`<div class="donetag">✔ ${esc(t.lastBy||"済み")}<button class="undo" onclick="uncheckTask('${esc(t.id)}')">取り消す</button></div>`;
+  } else if(mode==="wait"){
+    right=`<div class="nextd">次回<br>${esc(fmtMD(nd))}</div>`;
+  } else {
+    right=`<button class="ckbtn" onclick="openWho('${esc(t.id)}')">やった！</button>`;
+  }
+  const cc=mode==="over"?"var(--danger)":(mode==="done"?"var(--ok)":"var(--accent)");
+  return `<div class="card${mode==="done"?" done":""}${mode==="wait"?" wait":""}" style="--cc:${cc}">
+    <div class="info">
+      <div class="place">${esc(t.place)}</div>
+      ${t.body?`<div class="body">${esc(t.body)}</div>`:""}
+      <div class="meta"><span class="fbadge">${esc(freqLabel(t))}</span>${late?`<span class="latebadge">${late}日遅れ</span>`:""}<span>前回: ${last}</span></div>
+      ${t.note?`<div class="meta">📝 ${esc(t.note)}</div>`:""}
+    </div>
+    ${right}
+  </div>`;
+}
+
+function renderMaster(){
+  const on=TASKS.filter(t=>t.status!=="停止");
+  const off=TASKS.filter(t=>t.status==="停止");
+  let html="";
+  if(!TASKS.length){ $("list").innerHTML='<div class="empty"><div class="big">📋</div>まだ清掃箇所がありません<br>右下の「＋ 清掃箇所を追加」から登録できます</div>'; return; }
+  html+='<div class="sechead">📋 清掃箇所（'+on.length+'件）</div>';
+  on.forEach(t=>html+=masterCard(t,false));
+  if(off.length){
+    html+='<div class="sechead">⏸ おやすみ中</div>';
+    off.forEach(t=>html+=masterCard(t,true));
+  }
+  $("list").innerHTML=html;
+}
+function masterCard(t,stopped){
+  const last=t.lastDone?fmtMD(t.lastDone)+(t.lastBy?"・"+esc(t.lastBy):""):"まだ記録なし";
+  return `<div class="card${stopped?" stopped":""}" style="--cc:${stopped?"#aaa":"var(--accent)"}">
+    <div class="info">
+      <div class="place">${esc(t.place)}</div>
+      ${t.body?`<div class="body">${esc(t.body)}</div>`:""}
+      <div class="meta"><span class="fbadge">${esc(freqLabel(t))}</span><span>前回: ${last}</span></div>
+      ${t.note?`<div class="meta">📝 ${esc(t.note)}</div>`:""}
+    </div>
+    <button class="editlink" onclick="openEdit('${esc(t.id)}')">✏️ 編集</button>
+  </div>`;
+}
+
+function renderLog(){
+  if(!LOGS.length){ $("list").innerHTML='<div class="empty"><div class="big">🕐</div>まだ実施記録がありません</div>'; return; }
+  let html="", lastDate=null;
+  LOGS.forEach(g=>{
+    if(g.date!==lastDate){ html+=`<div class="sechead">${esc(fmtMD(g.date))}</div>`; lastDate=g.date; }
+    html+=`<div class="hitem"><span class="who2">${esc(g.by)}</span><span class="what"><b>${esc(g.place)}</b> ${esc(g.body)}</span><span class="when">${esc(g.at.split(" ")[1]||"")}</span></div>`;
+  });
+  $("list").innerHTML=html;
+}
+
+/* ===== チェック（実施者ピッカー）===== */
+function openWho(id){
+  const t=TASKS.find(x=>x.id===id); if(!t) return;
+  checkingId=id;
+  selWho=localStorage.getItem(WHO_KEY)||"";
+  if(!MEMBERS.includes(selWho)) selWho=MEMBERS[0]||"";
+  $("whoTask").innerHTML=`<b>${esc(t.place)}</b>${t.body?" — "+esc(t.body):""}<br><span style="font-size:11px">${esc(freqLabel(t))}・前回: ${t.lastDone?esc(fmtMD(t.lastDone)):"記録なし"}</span>`;
+  buildWhoChips();
+  $("whoErr").textContent="";
+  $("whoWrap").classList.add("show");
+}
+function buildWhoChips(){
+  const w=$("whoChips");
+  if(!MEMBERS.length){ w.innerHTML='<span style="font-size:12px;color:var(--sub)">メンバーが未登録です。下の「メンバーを編集する」から登録してください。</span>'; return; }
+  w.innerHTML="";
+  MEMBERS.forEach(m=>{
+    const b=document.createElement("button");
+    b.className="who"+(m===selWho?" on":"");
+    b.textContent=m;
+    b.onclick=()=>{ selWho=m; buildWhoChips(); };
+    w.appendChild(b);
+  });
+}
+$("whoSave").onclick=async()=>{
+  if(!checkingId) return;
+  if(!selWho){ $("whoErr").textContent="名前を選んでください"; return; }
+  const id=checkingId, by=selWho, today=todayStr();
+  localStorage.setItem(WHO_KEY,by);
+  const t=TASKS.find(x=>x.id===id);
+  const btn=$("whoSave"); btn.disabled=true; btn.textContent="記録中…";
+  try{
+    const j=await postAction({action:"check",taskId:id,by:by,date:today});
+    if(!j.ok) throw new Error(j.error||"記録できませんでした");
+    if(t){ t.lastDone=today; t.lastBy=by; }
+    LOGS.unshift({at:"",date:today,taskId:id,place:t?t.place:"",body:t?t.body:"",by:by});
+    $("whoWrap").classList.remove("show");
+    toast("✔ "+(t?t.place:"")+" 完了！おつかれさま");
+    render();
+    fetchAll();
+  }catch(e){ $("whoErr").textContent="エラー: "+e.message; }
+  finally{ btn.disabled=false; btn.textContent="チェックする"; }
+};
+async function uncheckTask(id){
+  const t=TASKS.find(x=>x.id===id); if(!t) return;
+  if(!confirm("「"+t.place+"」のきょうのチェックを取り消しますか？")) return;
+  const today=todayStr();
+  try{
+    const j=await postAction({action:"uncheck",taskId:id,date:today});
+    if(!j.ok) throw new Error(j.error||"失敗");
+    toast("取り消しました");
+    await fetchAll();
+  }catch(e){ toast("エラー: "+e.message); }
+}
+
+/* ===== 箇所 追加・編集 ===== */
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>$(b.dataset.close).classList.remove("show"));
+document.querySelectorAll(".mwrap").forEach(w=>w.addEventListener("click",e=>{ if(e.target===w) w.classList.remove("show"); }));
+
+function buildDowButtons(){
+  const w=$("fDows"); w.innerHTML="";
+  DOW_LABEL.forEach((l,i)=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="dow"; b.textContent=l;
+    b.onclick=()=>{ if(selDows.has(i)) selDows.delete(i); else selDows.add(i); b.classList.toggle("on",selDows.has(i)); };
+    w.appendChild(b);
+  });
+}
+function syncDowButtons(){ [...$("fDows").children].forEach((b,i)=>b.classList.toggle("on",selDows.has(i))); }
+$("fFreqType").onchange=()=>{
+  const v=$("fFreqType").value;
+  $("fWeeklyWrap").style.display=v==="weekly"?"":"none";
+  $("fMonthlyWrap").style.display=v==="monthly"?"":"none";
+  $("fIntervalWrap").style.display=v==="interval"?"":"none";
+};
+$("fab").onclick=()=>{
+  editingId=null;
+  $("emTitle").textContent="清掃箇所を追加";
+  $("fPlace").value=""; $("fBody").value=""; $("fNote").value="";
+  $("fFreqType").value="daily"; $("fFreqType").onchange();
+  selDows=new Set(); syncDowButtons();
+  $("fMonthDay").value=1; $("fIntDays").value=7;
+  $("fErr").textContent=""; $("fStop").style.display="none";
+  $("editWrap").classList.add("show");
+};
+function openEdit(id){
+  const t=TASKS.find(x=>x.id===id); if(!t) return;
+  editingId=id;
+  $("emTitle").textContent="清掃箇所を編集";
+  $("fPlace").value=t.place||""; $("fBody").value=t.body||""; $("fNote").value=t.note||"";
+  $("fFreqType").value=["daily","weekly","monthly","interval"].includes(t.freqType)?t.freqType:"daily";
+  $("fFreqType").onchange();
+  selDows=new Set(t.freqType==="weekly"?String(t.freqVal).split(",").map(x=>parseInt(x,10)).filter(x=>x>=0&&x<=6):[]);
+  syncDowButtons();
+  if(t.freqType==="monthly") $("fMonthDay").value=parseInt(t.freqVal,10)||1;
+  if(t.freqType==="interval") $("fIntDays").value=parseInt(t.freqVal,10)||7;
+  $("fErr").textContent="";
+  const stopped=t.status==="停止";
+  const sb=$("fStop");
+  sb.style.display="";
+  sb.className="mstop"+(stopped?" rev":"");
+  sb.textContent=stopped?"▶ この箇所を再開する":"⏸ この箇所をおやすみにする（一覧から外す）";
+  $("editWrap").classList.add("show");
+}
+function collectTask(){
+  const ft=$("fFreqType").value;
+  let fv="";
+  if(ft==="weekly"){
+    fv=[...selDows].sort((a,b)=>a-b).join(",");
+    if(!fv){ $("fErr").textContent="曜日を1つ以上選んでください"; return null; }
+  }
+  if(ft==="monthly") fv=String(Math.min(31,Math.max(1,parseInt($("fMonthDay").value,10)||1)));
+  if(ft==="interval") fv=String(Math.min(365,Math.max(1,parseInt($("fIntDays").value,10)||1)));
+  const place=$("fPlace").value.trim();
+  if(!place){ $("fErr").textContent="場所を入力してください"; return null; }
+  const old=editingId?TASKS.find(x=>x.id===editingId):null;
+  return { id:editingId||"", place, body:$("fBody").value.trim(), freqType:ft, freqVal:fv, note:$("fNote").value.trim(), status:old?old.status:"有効" };
+}
+$("fSave").onclick=async()=>{
+  const task=collectTask(); if(!task) return;
+  const btn=$("fSave"); btn.disabled=true; btn.textContent="保存中…"; $("fErr").textContent="";
+  try{
+    const j=await postAction({action:"saveTask",task});
+    if(!j.ok) throw new Error(j.error||"保存できませんでした");
+    $("editWrap").classList.remove("show");
+    toast(editingId?"更新しました":"追加しました");
+    await fetchAll();
+  }catch(e){ $("fErr").textContent="保存エラー: "+e.message; }
+  finally{ btn.disabled=false; btn.textContent="保存する"; }
+};
+$("fStop").onclick=async()=>{
+  const t=editingId?TASKS.find(x=>x.id===editingId):null; if(!t) return;
+  const toStop=t.status!=="停止";
+  if(toStop&&!confirm("「"+t.place+"」をおやすみにしますか？\n（削除ではなく、きょうの一覧に出なくなります。後から再開できます）")) return;
+  const task=collectTask(); if(!task) return;
+  task.status=toStop?"停止":"有効";
+  try{
+    const j=await postAction({action:"saveTask",task});
+    if(!j.ok) throw new Error(j.error||"失敗");
+    $("editWrap").classList.remove("show");
+    toast(toStop?"おやすみにしました":"再開しました");
+    await fetchAll();
+  }catch(e){ toast("エラー: "+e.message); }
+};
+
+/* ===== メンバー編集 ===== */
+$("memberEditBtn").onclick=()=>{
+  $("memberText").value=MEMBERS.join("\n");
+  $("memberErr").textContent="";
+  $("memberWrap").classList.add("show");
+};
+$("memberSave").onclick=async()=>{
+  const names=$("memberText").value.split("\n").map(x=>x.trim()).filter(Boolean);
+  if(!names.length){ $("memberErr").textContent="1人以上入力してください"; return; }
+  const btn=$("memberSave"); btn.disabled=true; btn.textContent="保存中…";
+  try{
+    const j=await postAction({action:"saveMembers",names});
+    if(!j.ok) throw new Error(j.error||"保存できませんでした");
+    MEMBERS=names;
+    $("memberWrap").classList.remove("show");
+    buildWhoChips();
+    toast("メンバーを更新しました");
+    fetchAll();
+  }catch(e){ $("memberErr").textContent="エラー: "+e.message; }
+  finally{ btn.disabled=false; btn.textContent="保存する"; }
+};
+
+boot();
+</script>
+</body>
+</html>
