@@ -82,6 +82,8 @@ main{padding:4px 14px 0;max-width:760px;margin:0 auto}
 .fld textarea{min-height:56px;resize:vertical;line-height:1.5}
 .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--accent)}
 .dowrow{display:flex;gap:5px}
+.morow{display:flex;flex-wrap:wrap;gap:5px}
+.morow .dow{flex:0 0 calc(16.666% - 5px)}
 .dow{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:10px 0;font-size:13px;font-weight:800;color:var(--sub)}
 .dow.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .merr{color:var(--danger);font-size:12px;font-weight:700;text-align:center;min-height:18px;padding-top:6px}
@@ -169,11 +171,13 @@ main{padding:4px 14px 0;max-width:760px;margin:0 auto}
           <option value="daily">毎日</option>
           <option value="weekly">毎週（曜日を選ぶ）</option>
           <option value="monthly">毎月（日にちを選ぶ）</option>
+          <option value="yearly">年に数回（月を選ぶ）</option>
           <option value="interval">○日ごと</option>
         </select>
       </div>
       <div class="fld" id="fWeeklyWrap" style="display:none"><label>曜日（複数OK）</label><div class="dowrow" id="fDows"></div></div>
       <div class="fld" id="fMonthlyWrap" style="display:none"><label>毎月何日？</label><input type="number" id="fMonthDay" min="1" max="31" value="1"></div>
+      <div class="fld" id="fYearlyWrap" style="display:none"><label>実施する月（複数OK）</label><div class="morow" id="fMonths"></div><div style="font-size:11px;color:var(--sub);margin-top:4px">選んだ月になったら「きょうやる」に出ます（月初が期日）</div></div>
       <div class="fld" id="fIntervalWrap" style="display:none"><label>何日ごと？</label><input type="number" id="fIntDays" min="1" max="365" value="7"></div>
       <div class="fld"><label>メモ</label><textarea id="fNote" placeholder="やり方のコツ・注意点など（任意）"></textarea></div>
       <div class="merr" id="fErr"></div>
@@ -230,6 +234,7 @@ let editingId=null;
 let checkingId=null;
 let selWho="";
 let selDows=new Set();
+let selMonths=new Set();
 
 /* ===== 資格情報 ===== */
 function creds(){ try{ return JSON.parse(localStorage.getItem(CRED_KEY)||sessionStorage.getItem(CRED_KEY)||"{}"); }catch(e){ return {}; } }
@@ -275,12 +280,22 @@ function nextDue(t){
       if(cand>last) return cand;
     }
   }
+  if(t.freqType==="yearly"){
+    const ms=String(t.freqVal).split(",").map(x=>parseInt(x,10)).filter(x=>x>=1&&x<=12);
+    if(!ms.length) return addDays(last,365);
+    const ld=toDate(last);
+    for(let k=1;k<=24;k++){
+      const cand=new Date(ld.getFullYear(),ld.getMonth()+k,1);
+      if(ms.includes(cand.getMonth()+1)) return toStr(cand);
+    }
+  }
   return addDays(last,1);
 }
 function freqLabel(t){
   if(t.freqType==="daily") return "毎日";
   if(t.freqType==="weekly"){ const ds=String(t.freqVal).split(",").map(x=>parseInt(x,10)).filter(x=>x>=0&&x<=6); return "毎週 "+(ds.map(d=>DOW_LABEL[d]).join("・")||"?"); }
   if(t.freqType==="monthly") return "毎月"+(parseInt(t.freqVal,10)||1)+"日";
+  if(t.freqType==="yearly"){ const ms=String(t.freqVal).split(",").map(x=>parseInt(x,10)).filter(x=>x>=1&&x<=12); return "毎年 "+(ms.map(m=>m+"月").join("・")||"?"); }
   if(t.freqType==="interval") return (parseInt(t.freqVal,10)||1)+"日ごと";
   return "";
 }
@@ -288,6 +303,7 @@ function freqLabel(t){
 /* ===== 起動 ===== */
 function boot(){
   buildDowButtons();
+  buildMonthButtons();
   const c=creds();
   if(c.email&&c.pass){
     $("gate").style.display="none";
@@ -522,10 +538,21 @@ function buildDowButtons(){
   });
 }
 function syncDowButtons(){ [...$("fDows").children].forEach((b,i)=>b.classList.toggle("on",selDows.has(i))); }
+function buildMonthButtons(){
+  const w=$("fMonths"); w.innerHTML="";
+  for(let m=1;m<=12;m++){
+    const b=document.createElement("button");
+    b.type="button"; b.className="dow"; b.textContent=m+"月";
+    b.onclick=()=>{ if(selMonths.has(m)) selMonths.delete(m); else selMonths.add(m); b.classList.toggle("on",selMonths.has(m)); };
+    w.appendChild(b);
+  }
+}
+function syncMonthButtons(){ [...$("fMonths").children].forEach((b,i)=>b.classList.toggle("on",selMonths.has(i+1))); }
 $("fFreqType").onchange=()=>{
   const v=$("fFreqType").value;
   $("fWeeklyWrap").style.display=v==="weekly"?"":"none";
   $("fMonthlyWrap").style.display=v==="monthly"?"":"none";
+  $("fYearlyWrap").style.display=v==="yearly"?"":"none";
   $("fIntervalWrap").style.display=v==="interval"?"":"none";
 };
 $("fab").onclick=()=>{
@@ -534,6 +561,7 @@ $("fab").onclick=()=>{
   $("fPlace").value=""; $("fBody").value=""; $("fNote").value="";
   $("fFreqType").value="daily"; $("fFreqType").onchange();
   selDows=new Set(); syncDowButtons();
+  selMonths=new Set(); syncMonthButtons();
   $("fMonthDay").value=1; $("fIntDays").value=7;
   $("fErr").textContent=""; $("fStop").style.display="none";
   $("editWrap").classList.add("show");
@@ -543,10 +571,12 @@ function openEdit(id){
   editingId=id;
   $("emTitle").textContent="清掃箇所を編集";
   $("fPlace").value=t.place||""; $("fBody").value=t.body||""; $("fNote").value=t.note||"";
-  $("fFreqType").value=["daily","weekly","monthly","interval"].includes(t.freqType)?t.freqType:"daily";
+  $("fFreqType").value=["daily","weekly","monthly","yearly","interval"].includes(t.freqType)?t.freqType:"daily";
   $("fFreqType").onchange();
   selDows=new Set(t.freqType==="weekly"?String(t.freqVal).split(",").map(x=>parseInt(x,10)).filter(x=>x>=0&&x<=6):[]);
   syncDowButtons();
+  selMonths=new Set(t.freqType==="yearly"?String(t.freqVal).split(",").map(x=>parseInt(x,10)).filter(x=>x>=1&&x<=12):[]);
+  syncMonthButtons();
   if(t.freqType==="monthly") $("fMonthDay").value=parseInt(t.freqVal,10)||1;
   if(t.freqType==="interval") $("fIntDays").value=parseInt(t.freqVal,10)||7;
   $("fErr").textContent="";
@@ -565,6 +595,10 @@ function collectTask(){
     if(!fv){ $("fErr").textContent="曜日を1つ以上選んでください"; return null; }
   }
   if(ft==="monthly") fv=String(Math.min(31,Math.max(1,parseInt($("fMonthDay").value,10)||1)));
+  if(ft==="yearly"){
+    fv=[...selMonths].sort((a,b)=>a-b).join(",");
+    if(!fv){ $("fErr").textContent="月を1つ以上選んでください"; return null; }
+  }
   if(ft==="interval") fv=String(Math.min(365,Math.max(1,parseInt($("fIntDays").value,10)||1)));
   const place=$("fPlace").value.trim();
   if(!place){ $("fErr").textContent="場所を入力してください"; return null; }
